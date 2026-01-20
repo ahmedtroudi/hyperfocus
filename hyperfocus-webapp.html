@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hyperfocus - RSVP Speed Reader</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+      padding: 30px 40px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .header h1 {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 16px;
+      color: #bfdbfe;
+    }
+
+    .dark-mode-toggle {
+      position: absolute;
+      top: 30px;
+      right: 40px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .dark-mode-toggle:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .main-content {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .left-panel {
+      flex: 1;
+      background: #0f172a;
+      border-radius: 16px;
+      padding: 32px;
+      min-width: 0;
+    }
+
+    .text-view-panel {
+      width: 350px;
+      background: #0f172a;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      max-height: 700px;
+    }
+
+    .text-view-panel.hidden {
+      display: none;
+    }
+
+    .upload-section {
+      border: 3px dashed #475569;
+      border-radius: 12px;
+      padding: 60px 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 24px;
+    }
+
+    .upload-section:hover {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .upload-section.hidden {
+      display: none;
+    }
+
+    .upload-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .upload-text {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .upload-hint {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .reader-section {
+      display: none;
+    }
+
+    .reader-section.active {
+      display: block;
+    }
+
+    .word-display {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 16px;
+      padding: 80px 40px;
+      text-align: center;
+      min-height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .word {
+      font-size: 64px;
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    .word-before, .word-after {
+      color: #e2e8f0;
+    }
+
+    .word-focus {
+      color: #ef4444;
+    }
+
+    .word-info {
+      font-size: 14px;
+      color: #64748b;
+      margin-top: 24px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #3b82f6;
+      transition: width 0.1s linear;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .control-btn {
+      background: #334155;
+      border: none;
+      border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #e2e8f0;
+      font-size: 24px;
+    }
+
+    .control-btn:hover {
+      background: #475569;
+      transform: scale(1.05);
+    }
+
+    .control-btn.play {
+      width: 72px;
+      height: 72px;
+      background: #3b82f6;
+      font-size: 32px;
+    }
+
+    .control-btn.play:hover {
+      background: #2563eb;
+    }
+
+    .new-file-btn {
+      background: #334155;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      color: #e2e8f0;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .new-file-btn:hover {
+      background: #475569;
+    }
+
+    .speed-control {
+      margin-bottom: 24px;
+    }
+
+    .speed-label {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .speed-slider {
+      width: 100%;
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .speed-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #3b82f6;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .speed-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: #3b82f6;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+    }
+
+    .speed-markers {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .speed-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      font-size: 10px;
+      color: #475569;
+    }
+
+    .error-msg {
+      background: #7f1d1d;
+      border: 1px solid #991b1b;
+      padding: 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #fca5a5;
+      margin-bottom: 24px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 5px solid #334155;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: #475569;
+      margin-top: 32px;
+    }
+
+    .text-view-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #334155;
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    .text-view-header .title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .text-view-header .title::before {
+      content: "📄";
+      font-size: 16px;
+    }
+
+    .toggle-view-btn {
+      background: none;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      transition: all 0.2s;
+    }
+
+    .toggle-view-btn:hover {
+      background: #1e293b;
+      color: #94a3b8;
+    }
+
+    .text-view-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      font-size: 14px;
+      line-height: 1.9;
+      color: #94a3b8;
+    }
+
+    .text-view-content::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .text-view-content::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+
+    .text-view-content::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 5px;
+    }
+
+    .text-view-content::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    .text-word {
+      display: inline;
+      padding: 2px 1px;
+      cursor: pointer;
+      transition: background 0.1s;
+      border-radius: 2px;
+    }
+
+    .text-word:hover {
+      background: #1e293b;
+    }
+
+    .text-word.current {
+      background: #1e3a8a;
+      color: #93c5fd;
+      font-weight: 600;
+      padding: 4px 6px;
+      margin: 0 2px;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+
+    .text-word.read {
+      color: #64748b;
+    }
+
+    .info-box {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: #93c5fd;
+    }
+
+    .empty-text-view {
+      padding: 40px 20px;
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .empty-text-view-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    body.light {
+      background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+      color: #1e293b;
+    }
+
+    body.light .left-panel,
+    body.light .text-view-panel {
+      background: white;
+    }
+
+    body.light .upload-section {
+      border-color: #cbd5e1;
+    }
+
+    body.light .upload-section:hover {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    body.light .word-display {
+      background: #f8fafc;
+    }
+
+    body.light .word-before,
+    body.light .word-after {
+      color: #1e293b;
+    }
+
+    body.light .progress-bar,
+    body.light .speed-slider {
+      background: #e2e8f0;
+    }
+
+    body.light .control-btn,
+    body.light .new-file-btn {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    body.light .control-btn:hover,
+    body.light .new-file-btn:hover {
+      background: #cbd5e1;
+    }
+
+    body.light .control-btn.play {
+      background: #3b82f6;
+      color: white;
+    }
+
+    body.light .control-btn.play:hover {
+      background: #2563eb;
+    }
+
+    body.light .text-view-header {
+      border-bottom-color: #e2e8f0;
+      color: #64748b;
+    }
+
+    body.light .text-view-content {
+      color: #64748b;
+    }
+
+    body.light .text-word:hover {
+      background: #e2e8f0;
+    }
+
+    body.light .text-word.current {
+      background: #dbeafe;
+      color: #1e40af;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+    }
+
+    body.light .text-word.read {
+      color: #94a3b8;
+    }
+
+    body.light .footer {
+      color: #64748b;
+    }
+
+    body.light .info-box {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.3);
+      color: #1e40af;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 12px;
+      }
+
+      .header {
+        padding: 20px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .main-content {
+        flex-direction: column;
+      }
+
+      .text-view-panel {
+        width: 100%;
+        max-height: 400px;
+      }
+
+      .word {
+        font-size: 48px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Hyperfocus</h1>
+      <p>Read faster with focused attention • ADHD treatment recommended by doctors</p>
+      <button class="dark-mode-toggle" id="darkModeToggle">☀️ Light</button>
+    </div>
+
+    <div class="main-content">
+      <div class="left-panel">
+        <div id="errorMsg" class="error-msg" style="display: none;"></div>
+        
+        <div id="loadingSection" class="loading" style="display: none;">
+          <div class="spinner"></div>
+          <p>Processing your file...</p>
+        </div>
+
+        <div id="uploadSection" class="upload-section">
+          <div class="upload-icon">📄</div>
+          <div class="upload-text">Upload PDF or Text File</div>
+          <div class="upload-hint">Click to browse or drag and drop</div>
+          <input type="file" id="fileInput" accept=".pdf,.txt">
+        </div>
+
+        <div id="readerSection" class="reader-section">
+          <div class="word-display">
+            <div>
+              <div class="word">
+                <span class="word-before" id="wordBefore"></span><span class="word-focus" id="wordFocus"></span><span class="word-after" id="wordAfter"></span>
+              </div>
+              <div class="word-info">
+                Word <span id="currentWord">0</span> of <span id="totalWords">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+
+          <div class="controls">
+            <button class="control-btn" id="resetBtn" title="Reset">↻</button>
+            <button class="control-btn play" id="playBtn" title="Play">▶</button>
+            <button class="new-file-btn" id="newFileBtn">New File</button>
+          </div>
+
+          <div class="speed-control">
+            <label class="speed-label">Reading Speed: <span id="wpmValue">300</span> WPM</label>
+            <input type="range" class="speed-slider" id="wpmSlider" min="100" max="1000" step="50" value="300">
+            <div class="speed-markers">
+              <span>100</span>
+              <span>300</span>
+              <span>500</span>
+              <span>700</span>
+              <span>1000</span>
+            </div>
+            <div class="speed-labels">
+              <span>Slow</span>
+              <span>Average</span>
+              <span>Fast</span>
+              <span>Very Fast</span>
+              <span>Extreme</span>
+            </div>
+          </div>
+
+          <div class="info-box">
+            💡 <strong>Keyboard shortcuts:</strong> Space (play/pause), ← → (navigate), R (reset)<br>
+            <strong style="margin-top: 8px; display: block;">📄 Text panel:</strong> Click any word on the right to jump to it
+          </div>
+        </div>
+      </div>
+
+      <div class="text-view-panel" id="textViewPanel">
+        <div class="text-view-header">
+          <span class="title">YOUR DOCUMENT</span>
+          <button class="toggle-view-btn" id="toggleViewBtn">Hide ×</button>
+        </div>
+        <div class="text-view-content" id="textViewContent">
+          <div class="empty-text-view">
+            <div class="empty-text-view-icon">📖</div>
+            <p><strong>Upload a document to begin</strong></p>
+            <p style="margin-top: 8px; font-size: 12px;">Your full text will appear here.<br>Click any word to jump to it.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Average reading speed: 200-300 WPM • Speed readers: 400-700 WPM • Built for ADHD brains and speed readers 🚀
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    // State
+    let words = [];
+    let currentIndex = 0;
+    let isPlaying = false;
+    let wpm = 300;
+    let intervalId = null;
+    let darkMode = true;
+    let showTextView = true;
+
+    // PDF.js setup
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // DOM elements
+    const uploadSection = document.getElementById('uploadSection');
+    const readerSection = document.getElementById('readerSection');
+    const loadingSection = document.getElementById('loadingSection');
+    const errorMsg = document.getElementById('errorMsg');
+    const fileInput = document.getElementById('fileInput');
+    const wordBefore = document.getElementById('wordBefore');
+    const wordFocus = document.getElementById('wordFocus');
+    const wordAfter = document.getElementById('wordAfter');
+    const currentWordEl = document.getElementById('currentWord');
+    const totalWordsEl = document.getElementById('totalWords');
+    const progressFill = document.getElementById('progressFill');
+    const playBtn = document.getElementById('playBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const newFileBtn = document.getElementById('newFileBtn');
+    const wpmSlider = document.getElementById('wpmSlider');
+    const wpmValue = document.getElementById('wpmValue');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const textViewPanel = document.getElementById('textViewPanel');
+    const textViewContent = document.getElementById('textViewContent');
+    const toggleViewBtn = document.getElementById('toggleViewBtn');
+
+    // Load saved preferences from localStorage
+    const savedWpm = localStorage.getItem('wpm');
+    const savedDarkMode = localStorage.getItem('darkMode');
+    const savedShowTextView = localStorage.getItem('showTextView');
+
+    if (savedWpm) {
+      wpm = parseInt(savedWpm);
+      wpmSlider.value = wpm;
+      wpmValue.textContent = wpm;
+    }
+    if (savedDarkMode !== null) {
+      darkMode = savedDarkMode === 'true';
+      updateDarkMode();
+    }
+    if (savedShowTextView !== null) {
+      showTextView = savedShowTextView === 'true';
+    } else {
+      showTextView = true; // Default to visible
+    }
+    updateTextViewVisibility();
+
+    // Calculate optimal recognition point
+    function getColoredWord(word) {
+      if (!word) return { before: '', focus: '', after: '' };
+      
+      const len = word.length;
+      let focusIndex;
+      
+      if (len === 1) focusIndex = 0;
+      else if (len === 2) focusIndex = 0;
+      else if (len === 3) focusIndex = 1;
+      else focusIndex = Math.floor((len - 1) * 0.3);
+      
+      return {
+        before: word.slice(0, focusIndex),
+        focus: word[focusIndex],
+        after: word.slice(focusIndex + 1)
+      };
+    }
+
+    // Process text into words
+    function processText(text) {
+      words = text.split(/\s+/).filter(w => w.length > 0);
+      if (words.length === 0) {
+        showError('No text found to read');
+        return;
+      }
+      
+      currentIndex = 0;
+      isPlaying = false;
+      showReader();
+      renderTextView();
+      updateDisplay();
+    }
+
+    // Handle file upload
+    uploadSection.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      showLoading();
+      hideError();
+
+      try {
+        if (file.type === 'application/pdf') {
+          const arrayBuffer = await file.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          
+          const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
+          let fullText = '';
+          
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const pageText = content.items.map(item => item.str).join(' ');
+            fullText += pageText + ' ';
+          }
+          
+          if (!fullText.trim()) {
+            throw new Error('No text found in PDF');
+          }
+
+          processText(fullText);
+        } else if (file.type === 'text/plain') {
+          const content = await file.text();
+          
+          if (!content.trim()) {
+            throw new Error('Text file is empty');
+          }
+
+          processText(content);
+        } else {
+          throw new Error('Unsupported file type');
+        }
+      } catch (err) {
+        showError(err.message || 'Error reading file');
+        hideLoading();
+        showUpload();
+      }
+    });
+
+    // Display current word
+    function updateDisplay() {
+      if (words.length === 0) return;
+      
+      const word = words[currentIndex] || '';
+      const { before, focus, after } = getColoredWord(word);
+      
+      wordBefore.textContent = before;
+      wordFocus.textContent = focus;
+      wordAfter.textContent = after;
+      
+      currentWordEl.textContent = currentIndex + 1;
+      totalWordsEl.textContent = words.length;
+      
+      const progress = (currentIndex / words.length) * 100;
+      progressFill.style.width = progress + '%';
+      
+      updateTextView();
+    }
+
+    // Update text view highlighting
+    function updateTextView() {
+      const wordElements = textViewContent.querySelectorAll('.text-word');
+      wordElements.forEach((el, index) => {
+        el.classList.remove('current', 'read');
+        if (index === currentIndex) {
+          el.classList.add('current');
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (index < currentIndex) {
+          el.classList.add('read');
+        }
+      });
+    }
+
+    // Render full text view
+    function renderTextView() {
+      textViewContent.innerHTML = words.map((word, index) => 
+        `<span class="text-word" data-index="${index}">${word}</span>`
+      ).join(' ');
+      
+      textViewContent.querySelectorAll('.text-word').forEach(el => {
+        el.addEventListener('click', () => {
+          const index = parseInt(el.getAttribute('data-index'));
+          currentIndex = index;
+          if (isPlaying) {
+            stopPlayback();
+            startPlayback();
+          } else {
+            updateDisplay();
+          }
+        });
+      });
+      
+      updateTextView();
+    }
+
+    // Playback control
+    function startPlayback() {
+      if (words.length === 0) return;
+      
+      if (currentIndex >= words.length - 1) {
+        currentIndex = 0;
+      }
+      
+      isPlaying = true;
+      playBtn.textContent = '⏸';
+      
+      const delay = 60000 / wpm;
+      intervalId = setInterval(() => {
+        currentIndex++;
+        if (currentIndex >= words.length) {
+          stopPlayback();
+          currentIndex = words.length - 1;
+        }
+        updateDisplay();
+      }, delay);
+    }
+
+    function stopPlayback() {
+      isPlaying = false;
+      playBtn.textContent = '▶';
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }
+
+    function togglePlayback() {
+      if (isPlaying) {
+        stopPlayback();
+      } else {
+        startPlayback();
+      }
+    }
+
+    function reset() {
+      stopPlayback();
+      currentIndex = 0;
+      updateDisplay();
+    }
+
+    // UI state management
+    function showUpload() {
+      uploadSection.classList.remove('hidden');
+      readerSection.classList.remove('active');
+      loadingSection.style.display = 'none';
+    }
+
+    function showReader() {
+      uploadSection.classList.add('hidden');
+      readerSection.classList.add('active');
+      loadingSection.style.display = 'none';
+    }
+
+    function showLoading() {
+      uploadSection.classList.add('hidden');
+      readerSection.classList.remove('active');
+      loadingSection.style.display = 'block';
+    }
+
+    function hideLoading() {
+      loadingSection.style.display = 'none';
+    }
+
+    function showError(message) {
+      errorMsg.textContent = message;
+      errorMsg.style.display = 'block';
+    }
+
+    function hideError() {
+      errorMsg.style.display = 'none';
+    }
+
+    function updateDarkMode() {
+      if (darkMode) {
+        document.body.classList.remove('light');
+        darkModeToggle.textContent = '☀️ Light';
+      } else {
+        document.body.classList.add('light');
+        darkModeToggle.textContent = '🌙 Dark';
+      }
+    }
+
+    function updateTextViewVisibility() {
+      if (showTextView) {
+        textViewPanel.classList.remove('hidden');
+        toggleViewBtn.textContent = 'Hide ×';
+      } else {
+        textViewPanel.classList.add('hidden');
+        toggleViewBtn.textContent = 'Show ≡';
+      }
+    }
+
+    // Event listeners
+    playBtn.addEventListener('click', togglePlayback);
+    resetBtn.addEventListener('click', reset);
+    newFileBtn.addEventListener('click', () => {
+      stopPlayback();
+      words = [];
+      currentIndex = 0;
+      fileInput.value = '';
+      showUpload();
+      hideError();
+    });
+
+    wpmSlider.addEventListener('input', (e) => {
+      wpm = parseInt(e.target.value);
+      wpmValue.textContent = wpm;
+      localStorage.setItem('wpm', wpm);
+      
+      if (isPlaying) {
+        stopPlayback();
+        startPlayback();
+      }
+    });
+
+    darkModeToggle.addEventListener('click', () => {
+      darkMode = !darkMode;
+      updateDarkMode();
+      localStorage.setItem('darkMode', darkMode);
+    });
+
+    toggleViewBtn.addEventListener('click', () => {
+      showTextView = !showTextView;
+      updateTextViewVisibility();
+      localStorage.setItem('showTextView', showTextView);
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (words.length === 0) return;
+      
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlayback();
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        if (currentIndex > 0) {
+          currentIndex--;
+          updateDisplay();
+        }
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        if (currentIndex < words.length - 1) {
+          currentIndex++;
+          updateDisplay();
+        }
+      } else if (e.code === 'KeyR') {
+        e.preventDefault();
+        reset();
+      }
+    });
+  </script>
+</body>
+</html>

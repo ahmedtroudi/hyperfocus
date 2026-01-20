@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Hyperfocus - RSVP Speed Reader",
+  "version": "1.0.0",
+  "description": "Read faster with Rapid Serial Visual Presentation. Perfect for ADHD readers. Highlights the focal point of each word for speed reading.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
