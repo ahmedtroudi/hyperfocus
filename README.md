@@ -106,11 +106,7 @@ hyperfocus-extension/
 
 ## Future Ideas
 
-- [ ] Cloud sync of reading progress
 - [ ] Reading statistics and history
-- [ ] Multiple reading profiles
-- [ ] Bionic reading mode option
-- [ ] Integration with e-reader services
 - [ ] Mobile app version
 
 ## License
